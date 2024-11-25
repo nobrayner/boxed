@@ -1,5 +1,5 @@
 import { keys, values } from "./Dict";
-import { Result } from "./OptionResult";
+import { Result, type InferError, type InferOk } from "./OptionResult";
 import { LooseRecord } from "./types";
 import { zip } from "./ZipUnzip";
 
@@ -315,15 +315,15 @@ export class __Future<A> {
    *
    * Takes a callback taking the Ok value and returning a new result and returns a future resolving to this new result
    */
-  mapOkToResult<A, E, B, F>(
+  mapOkToResult<A, E, R extends Result<any, any>>(
     this: Future<Result<A, E>>,
-    func: (value: A) => Result<B, F>,
+    func: (value: A) => R,
     propagateCancel = false,
-  ): Future<Result<B, F | E>> {
+  ): Future<Result<InferOk<R>, InferError<R> | E>> {
     return this.map((value) => {
       return value.match({
         Ok: (value) => func(value),
-        Error: () => value as unknown as Result<B, E | F>,
+        Error: () => value as Result<InferOk<R>, E>,
       });
     }, propagateCancel);
   }
@@ -333,15 +333,15 @@ export class __Future<A> {
    *
    * Takes a callback taking the Error value and returning a new result and returns a future resolving to this new result
    */
-  mapErrorToResult<A, E, B, F>(
+  mapErrorToResult<A, E, R extends Result<any, any>>(
     this: Future<Result<A, E>>,
-    func: (value: E) => Result<B, F>,
+    func: (value: E) => R,
     propagateCancel = false,
-  ): Future<Result<A | B, F>> {
+  ): Future<Result<InferOk<R> | A, InferError<R>>> {
     return this.map((value) => {
       return value.match({
         Error: (error) => func(error),
-        Ok: () => value as unknown as Result<A | B, F>,
+        Ok: () => value as Result<A, InferError<R>>,
       });
     }, propagateCancel);
   }

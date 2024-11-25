@@ -18,7 +18,7 @@ test("Result.flatMap", () => {
       return Result.Ok("ALL_IS_WELL" as const);
     }),
   ).toMatchTypeOf<
-    Result<number | "ALL_IS_WELL", "TOO_LOW" | Error | { code: "ZERO" }>
+    Result<"ALL_IS_WELL", "TOO_LOW" | Error | { code: "ZERO" }>
   >();
 });
 
