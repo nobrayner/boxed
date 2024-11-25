@@ -534,13 +534,13 @@ class __Result<A, E> {
    *
    * (Result\<A, E>, A => Result\<B, F>) => Result\<B, E | F>
    */
-  flatMap<B, F>(
+  flatMap<R extends Result<any, any>>(
     this: Result<A, E>,
-    func: (value: A) => Result<B, F>,
-  ): Result<B, F | E> {
+    func: (value: A) => R,
+  ): Result<InferOk<R>, InferError<R> | E> {
     return this.tag === "Ok"
       ? func(this.value)
-      : (this as unknown as Result<B, F | E>);
+      : (this as Result<InferOk<R>, E>);
   }
 
   /**
@@ -548,12 +548,12 @@ class __Result<A, E> {
    *
    * (Result\<A, E>, E => Result\<A, F>) => Result\<A | B, F>
    */
-  flatMapError<B, F>(
+  flatMapError<R extends Result<any, any>>(
     this: Result<A, E>,
-    func: (value: E) => Result<B, F>,
-  ): Result<A | B, F> {
+    func: (value: E) => R,
+  ): Result<InferOk<R> | A, InferError<R>> {
     return this.tag === "Ok"
-      ? (this as unknown as Result<A | B, F>)
+      ? (this as Result<A, InferError<R>>)
       : func(this.error);
   }
   /**
@@ -690,3 +690,12 @@ interface Error<A, E> extends __Result<A, E> {
 
 export const Result = __Result;
 export type Result<A, E> = Ok<A, E> | Error<A, E>;
+export type InferOk<R extends Result<any, any>> = R extends Ok<infer A, any>
+  ? A
+  : never;
+export type InferError<R extends Result<any, any>> = R extends Error<
+  any,
+  infer E
+>
+  ? E
+  : never;
